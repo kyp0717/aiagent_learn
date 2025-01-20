@@ -6,4 +6,5 @@ load_dotenv()
 
 api = REST()
 
-api.get_bars("AAPL", TimeFrame.Hour, "2021-06-08", "2021-06-08", adjustment='raw').df
+a=api.get_bars("AAPL", TimeFrame.Hour, "2021-06-08", "2021-06-08", adjustment='raw').df
+print(a)
