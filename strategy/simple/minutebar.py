@@ -2,11 +2,26 @@ import requests
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from time import sleep
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
 
-def paca_get_latest_bar(feed: str, symbol: str) -> None:
+# Configure logging to console and file
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        # logging.FileHandler("algo.log")
+    ]
+)
+
+def paca_get_bar(feed: str, symbol: str) -> None:
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
+    supabase: Client = create_client(supabase_url, supabase_key)
     endpoint = "https://data.alpaca.markets/v2/stocks/bars/latest"
     url = f"{endpoint}?symbols={symbol}&feed={feed}"
 
@@ -16,11 +31,10 @@ def paca_get_latest_bar(feed: str, symbol: str) -> None:
         "APCA-API-SECRET-KEY": os.getenv("APCA_API_SECRET_KEY")
     }
 
+    logging.info(f"PACA: fetching bar data for {symbol} ...")
     response = requests.get(url, headers=headers)
     data = response.json()
     bar = data['bars'][symbol]
-    print(bar)
-
     bar = {
     'symbol': symbol,
     'current': bar['c'],
@@ -33,11 +47,25 @@ def paca_get_latest_bar(feed: str, symbol: str) -> None:
     'timestamp': bar['t']
     }
 
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
-    supabase: Client = create_client(supabase_url, supabase_key)
+    ## get latest bar from postgres
+    logging.info(f"Supabase: load bar for {symbol} ...")
+    db_bar = supabase.table("bar_realtime") \
+                .select("*") \
+                .filter('symbol','eq',symbol) \
+                .order('timestamp', desc=True) \
+                .limit(1) \
+                .execute()
+    
+    if db_bar.count == None:
+        supabase.table("bar_realtime").insert(bar).execute()
+        return None
+    if db_bar.data[0]['timestamp'] <= bar['timestamp']:
+        supabase.table("bar_realtime").insert(bar).execute()
+        return None
 
-    supabase.table("bar_realtime").insert(bar).execute()
+ 
+
+
 
 
 def paca_get_history_bar(feed: str, symbol: str) -> None:
@@ -73,18 +101,6 @@ def paca_get_history_bar(feed: str, symbol: str) -> None:
 
         supabase.table("bar_history").insert(bar).execute()
 
-def pg_fetch_bars(symbol: str):
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
-    supabase: Client = create_client(supabase_url, supabase_key)
-
-    response = supabase.table("bar_history") \
-                    .select("*") \
-                    .filter('symbol','eq',symbol) \
-                    .order('timestamp', desc=True) \
-                    .limit(10) \
-                   .execute()
-    return response.data
 
 
 
