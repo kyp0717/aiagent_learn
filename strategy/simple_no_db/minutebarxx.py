@@ -8,7 +8,6 @@ import urllib.parse
 import pandas as pd
 import json
 
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -21,8 +20,6 @@ logging.basicConfig(
         # logging.FileHandler("algo.log")
     ]
 )
-
-
 def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     # Get current time in UTC
     now_utc = datetime.now(timezone.utc)

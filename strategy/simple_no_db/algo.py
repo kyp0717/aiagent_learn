@@ -22,10 +22,7 @@ secret= os.getenv("APCA_API_SECRET_KEY")
 
 # setup alpaca client
 trade_client = TradingClient(api_key=key, secret_key=secret, paper=True)
-# setup supabase client
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(supabase_url, supabase_key)
+
 
 # Configure logging to console and file
 logging.basicConfig(
@@ -41,22 +38,6 @@ class PacaPosition(Enum):
     Open = 'open'
     Close = 'close'
     Nonexist = 'nonexist'
-
-def load_db(symbol: str) -> None:
-    logging.info("Algo: Initial loading bar data to supabase ")
-    while True:
-        bar_count = supabase.table("bar_realtime") \
-                    .select("*", count="exact", head=True).execute()
-        logging.info(f"Algo: number of bars - {bar_count.count}")
-        if bar_count.count < 10:
-            mb.paca_get_bar(feed="iex",symbol=symbol)
-            mb.paca_get_bar(feed="iex",symbol="SPY")
-            time.sleep(5)
-        else:
-            break
-    logging.info("Algo: ---------------------------------------")
-    logging.info("Algo: Initial data completed ... moving to predict")
-
 
 def sell(symbol: str) -> None:
     market_order_data = MarketOrderRequest(
@@ -86,7 +67,7 @@ def pnl(position: dict) -> float:
 
 def run(symbol: str) -> None:
     logging.info("Algo: begins ...")
-    load_db(symbol)
+
     p = PacaPosition.Nonexist
     while True:
         # wait for 1 minute
