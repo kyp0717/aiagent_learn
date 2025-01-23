@@ -28,7 +28,6 @@ def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     now_utc = datetime.now(timezone.utc)
     # Calculate time 15 minutes ago
     fifteen_minutes_ago = now_utc - timedelta(minutes=15)
-
     fifteen_minutes_ago_iso = fifteen_minutes_ago.isoformat()  # Generates an ISO 8601/RFC 3339 compatible string
 
     url_encoded_timestamp = urllib.parse.quote(fifteen_minutes_ago_iso)
@@ -36,7 +35,7 @@ def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     print(url_encoded_timestamp)
 
 
-    symbol = f"?symbols={symbol}"
+    urlsymbol = f"?symbols={symbol}"
     timeframe = "&timeframe=1Min"
     # start="&start=2024-01-03T00%3A00%3A00Z"
     start = f"&start={url_encoded_timestamp}"
@@ -47,7 +46,7 @@ def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     adjust="&adjustment=raw"
     sort="&sort=asc"
     endpoint = "https://data.alpaca.markets/v2/stocks/bars"
-    url = endpoint + symbol + timeframe + start + end + limit + feed + adjust + sort
+    url = endpoint + urlsymbol + timeframe + start + end + limit + feed + adjust + sort
     
 
     headers = {
@@ -59,6 +58,7 @@ def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     logging.info(f"PACA: fetching bar data for {symbol} ...")
     response = requests.get(url, headers=headers)
     data = response.json()
+    # return data
     return pd.DataFrame(data['bars'][symbol])
 
 
