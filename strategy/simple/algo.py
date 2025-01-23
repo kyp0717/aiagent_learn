@@ -1,12 +1,16 @@
 import model as mod
 from enum import Enum
 from enum import IntEnum
-from alpaca.trading.client import TradingClient
+
 import os
 from dotenv import load_dotenv
 import time
 from supabase import create_client, Client
 import logging
+
+from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce
 
 # Load environment variables from .env file
 load_dotenv()
@@ -65,12 +69,32 @@ def run_simple_model(symbol: str) -> None:
         if signal == mod.SignalTrade.Buy:
             if p==PacaPosition.Nonexist:
                 logging.info("Algo: Open positon on {symbol}-  Submitting order")
-                trade_client.submit_order(symbol, 1, 'buy', 'market', 'gtc')
+                # preparing market order
+                market_order_data = MarketOrderRequest(
+                                    symbol=symbol,
+                                    qty=1,
+                                    side=OrderSide.BUY,
+                                    time_in_force=TimeInForce.DAY
+                                    )
+                # Market order
+                market_order = trade_client.submit_order(
+                                order_data=market_order_data
+                            )
             elif p==PacaPosition.Open:
-                continue
+                pass
         elif signal == mod.SignalTrade.Sell:
-             trade_client.submit_order(symbol, 1, 'sell', 'market', 'gtc')
-             break
+            # preparing market order
+            market_order_data = MarketOrderRequest(
+                                symbol=symbol,
+                                qty=1,
+                                side=OrderSide.SELL,
+                                time_in_force=TimeInForce.DAY
+                                )
+            # Market order
+            market_order = trade_client.submit_order(
+                            order_data=market_order_data
+                        )
+            break
         
     print("Algo: Done")
 
