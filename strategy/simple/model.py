@@ -29,7 +29,7 @@ class SignalTrade(Enum):
 
 def fit(symbol: str, feature: str) -> None:
     ## load bar data to postgres
-    logging.info(f"Model: fetching bar data ...")
+    logging.info(f"Fit: fetching bar data and load to supabase ...")
     mb.paca_get_bar(feed="iex",symbol=symbol)
     mb.paca_get_bar(feed="iex",symbol="SPY")
 
@@ -48,7 +48,7 @@ def fit(symbol: str, feature: str) -> None:
         logging.info(f"Model: not enough bar for fitting ...")
         return None
     
-    logging.info(f"Model: fitting ...")
+    logging.info(f"Fit: calculate slope and load to supabase ...")
     feat = np.array([bar[feature] for bar in bars.data])
     pos = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).reshape(-1, 1)
 
@@ -79,7 +79,7 @@ def predict(symbol: str) -> SignalTrade:
     supabase: Client = create_client(supabase_url, supabase_key)
 
 
-    logging.info(f"Algo: load slope ...")
+    logging.info(f"Supabase: get indicators ...")
     slope_price = supabase.table("simple_model") \
                     .select("slope") \
                     .filter('symbol','eq',symbol) \
@@ -87,7 +87,7 @@ def predict(symbol: str) -> SignalTrade:
                     .order('timestamp', desc=True) \
                     .limit(1) \
                    .execute()
-    sp = slope_price.data[0]['slope']
+    price_indicator = slope_price.data[0]['slope']
     slope_volume = supabase.table("simple_model") \
                     .select("slope") \
                     .filter('symbol','eq',symbol) \
@@ -95,7 +95,7 @@ def predict(symbol: str) -> SignalTrade:
                     .order('timestamp', desc=True) \
                     .limit(1) \
                    .execute()
-    sv = slope_price.data[0]['slope']
+    volume_indicator = slope_volume.data[0]['volume']
     slope_spy = supabase.table("simple_model") \
                     .select("slope") \
                     .filter('symbol','eq',"SPY") \
@@ -103,10 +103,12 @@ def predict(symbol: str) -> SignalTrade:
                     .order('timestamp', desc=True) \
                     .limit(1) \
                    .execute()
-    sp_spy = slope_price.data[0]['slope']
+    spy_price_indicator = slope_spy.data[0]['slope']
     
-    logging.info(f"Model: trade signal genrated ...")
-    if sp > 0 and sv > 0 and sp_spy > 0:
+    logging.info(f"Model: generate trade signal ...")
+    if price_indicator > 0 and \
+       volume_indicator > 0 and \
+       spy_price_indicator > 0:
       return  SignalTrade.Buy
     else:
       return SignalTrade.Sell

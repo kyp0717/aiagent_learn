@@ -64,10 +64,6 @@ def paca_get_bar(feed: str, symbol: str) -> None:
         return None
 
  
-
-
-
-
 def paca_get_history_bar(feed: str, symbol: str) -> None:
     endpoint = "https://data.alpaca.markets/v2/stocks/bars"
     url =f"{endpoint}?symbols={symbol}&timeframe=1Min&start=2024-01-03T00%3A00%3A00Z&end=2024-01-04T00%3A00%3A00Z&limit=50&adjustment=raw&feed=sip&sort=asc"
