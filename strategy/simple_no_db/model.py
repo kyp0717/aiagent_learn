@@ -1,4 +1,3 @@
-import minutebar as mb
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from supabase import create_client, Client
