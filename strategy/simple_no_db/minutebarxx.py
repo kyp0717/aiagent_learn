@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 import urllib.parse
 import pandas as pd
 import json
+import pytz
+from typing import List
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,17 +22,21 @@ logging.basicConfig(
         # logging.FileHandler("algo.log")
     ]
 )
-def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
+def paca_get_bars(feed: str, symbol: str) -> List:
+    est = pytz.timezone('US/Eastern')
+    fmt = '%Y-%m-%d %H:%M:%S %Z%z'
+
     # Get current time in UTC
     now_utc = datetime.now(timezone.utc)
+    print(f'current time - {now_utc.astimezone(est).strftime(fmt)}')
     # Calculate time 15 minutes ago
-    fifteen_minutes_ago = now_utc - timedelta(minutes=15)
-    fifteen_minutes_ago_iso = fifteen_minutes_ago.isoformat()  # Generates an ISO 8601/RFC 3339 compatible string
+    ten_minutes_ago = now_utc - timedelta(minutes=10)
+    ten_minutes_ago_iso = ten_minutes_ago.isoformat()  # Generates an ISO 8601/RFC 3339 compatible string
 
-    url_encoded_timestamp = urllib.parse.quote(fifteen_minutes_ago_iso)
+    url_encoded_timestamp = urllib.parse.quote(ten_minutes_ago_iso)
     url_encoded_now = urllib.parse.quote(now_utc.isoformat())
     print(url_encoded_timestamp)
-
+    print(f'10 minutes ago - {ten_minutes_ago.astimezone(est).strftime(fmt)}')
 
     urlsymbol = f"?symbols={symbol}"
     timeframe = "&timeframe=1Min"
@@ -55,8 +61,11 @@ def paca_get_bars(feed: str, symbol: str) -> pd.DataFrame:
     logging.info(f"PACA: fetching bar data for {symbol} ...")
     response = requests.get(url, headers=headers)
     data = response.json()
-    # return data
-    return pd.DataFrame(data['bars'][symbol])
+    if not data:
+        logging.error(f"PACA: no data returned for {symbol}")
+        return None
+    else:
+        return data['bars'][symbol]
 
 
     

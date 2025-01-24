@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from supabase import create_client, Client
 import os
 from enum import Enum
 from enum import IntEnum
@@ -9,8 +8,10 @@ import sys
 import minutebarxx as mb
 from dotenv import load_dotenv
 
+
 # Load environment variables from .env file
 load_dotenv()
+
 # Configure logging to console and file
 logging.basicConfig(
     level=logging.INFO,
@@ -26,22 +27,20 @@ class SignalTrade(Enum):
     Sell = 'sell'
     Hold = 'hold'
 
-
-
 def fit(symbol: str, feature: str) -> float:
     ## load bar data to postgres
     logging.info(f"Fit: fetching bar data and load to supabase ...")
-    bars = mb.paca_get_bars(feed="iex",symbol=symbol)
+    bar_ls = mb.paca_get_bars(feed="iex",symbol=symbol)
+    feat = np.array([bar[feature] for bar in bar_ls])
   
-    logging.info(f"Fit: calc slope of price and volume for {symbol}")
-    feat = np.array([bar[feature] for bar in bars])
-    pos = np.array([1, 2, 3, 4, 5, 6]).reshape(-1, 1)
+    pos = np.array([i for i,_ in enumerate(bar_ls, start=1)]).reshape(-1, 1)
+    # pos = np.array([1, 2, 3, 4, 5, 6]).reshape(-1, 1)
 
+    logging.info(f"Fit: calc slope of price and volume for {symbol}")
     model = LinearRegression().fit(pos, feat)
     slope = float(model.coef_[0])
     # intercept = float(model.intercept_)
     return slope
-
 
 
 def predict(symbol: str) -> SignalTrade:
@@ -49,9 +48,9 @@ def predict(symbol: str) -> SignalTrade:
     # measure rolling slope
 
     logging.info(f"Model: fitting ...")
-    price_indicator =fit(symbol, "current")
-    volume_indicator = fit(symbol, "volume")
-    benchmark_sp500 = fit("SPY", "current")
+    price_indicator =fit(symbol, "c")
+    volume_indicator = fit(symbol, "v")
+    benchmark_sp500 = fit("SPY", "c")
     
     logging.info(f"Model: generate trade signal ...")
     if price_indicator > 0 and \
@@ -60,5 +59,3 @@ def predict(symbol: str) -> SignalTrade:
       return  SignalTrade.Buy
     else:
       return SignalTrade.Sell
-
-      

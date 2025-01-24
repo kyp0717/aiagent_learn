@@ -1,4 +1,4 @@
-import model as mod
+import modelxx as mod
 from enum import Enum
 from enum import IntEnum
 
@@ -11,7 +11,7 @@ import logging
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
-import minutebar as mb
+import minutebarxx as mb
 import time
 
 # Load environment variables from .env file
@@ -22,7 +22,6 @@ secret= os.getenv("APCA_API_SECRET_KEY")
 
 # setup alpaca client
 trade_client = TradingClient(api_key=key, secret_key=secret, paper=True)
-
 
 # Configure logging to console and file
 logging.basicConfig(
