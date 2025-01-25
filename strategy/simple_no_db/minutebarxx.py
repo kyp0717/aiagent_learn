@@ -28,15 +28,15 @@ def paca_get_bars(feed: str, symbol: str) -> List:
 
     # Get current time in UTC
     now_utc = datetime.now(timezone.utc)
-    print(f'current time - {now_utc.astimezone(est).strftime(fmt)}')
+    # print(f'current time - {now_utc.astimezone(est).strftime(fmt)}')
     # Calculate time 15 minutes ago
     ten_minutes_ago = now_utc - timedelta(minutes=10)
     ten_minutes_ago_iso = ten_minutes_ago.isoformat()  # Generates an ISO 8601/RFC 3339 compatible string
 
     url_encoded_timestamp = urllib.parse.quote(ten_minutes_ago_iso)
     url_encoded_now = urllib.parse.quote(now_utc.isoformat())
-    print(url_encoded_timestamp)
-    print(f'10 minutes ago - {ten_minutes_ago.astimezone(est).strftime(fmt)}')
+    # print(url_encoded_timestamp)
+    # print(f'10 minutes ago - {ten_minutes_ago.astimezone(est).strftime(fmt)}')
 
     urlsymbol = f"?symbols={symbol}"
     timeframe = "&timeframe=1Min"
@@ -58,7 +58,6 @@ def paca_get_bars(feed: str, symbol: str) -> List:
         "APCA-API-SECRET-KEY": os.getenv("APCA_API_SECRET_KEY")
     }
 
-    logging.info(f"PACA: fetching bar data for {symbol} ...")
     response = requests.get(url, headers=headers)
     data = response.json()
     if not data:

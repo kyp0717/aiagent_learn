@@ -29,14 +29,14 @@ class SignalTrade(Enum):
 
 def fit(symbol: str, feature: str) -> float:
     ## load bar data to postgres
-    logging.info(f"Fit: fetching bar data and load to supabase ...")
+    logging.info(f"{symbol} - Get bar data from paca.")
     bar_ls = mb.paca_get_bars(feed="iex",symbol=symbol)
     feat = np.array([bar[feature] for bar in bar_ls])
   
     pos = np.array([i for i,_ in enumerate(bar_ls, start=1)]).reshape(-1, 1)
     # pos = np.array([1, 2, 3, 4, 5, 6]).reshape(-1, 1)
 
-    logging.info(f"Fit: calc slope of price and volume for {symbol}")
+    logging.info(f"{symbol} calculpate slope")
     model = LinearRegression().fit(pos, feat)
     slope = float(model.coef_[0])
     # intercept = float(model.intercept_)
@@ -52,7 +52,7 @@ def predict(symbol: str) -> SignalTrade:
     volume_indicator = fit(symbol, "v")
     benchmark_sp500 = fit("SPY", "c")
     
-    logging.info(f"Model: generate trade signal ...")
+    logging.info(f"{symbol} Predict trade signal ...")
     if price_indicator > 0 and \
        volume_indicator > 0 and \
        benchmark_sp500 > 0:

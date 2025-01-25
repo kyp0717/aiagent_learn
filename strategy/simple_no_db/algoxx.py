@@ -1,4 +1,6 @@
 import modelxx as mod
+import minutebarxx as mb
+
 from enum import Enum
 from enum import IntEnum
 
@@ -11,8 +13,10 @@ import logging
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
-import minutebarxx as mb
-import time
+
+# import pytz
+# from datetime import datetime
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,6 +36,8 @@ logging.basicConfig(
         # logging.FileHandler("algo.log")
     ]
 )
+
+
 
 class PacaPosition(Enum):
     Open = 'open'
@@ -58,17 +64,21 @@ def buy(symbol: str) -> None:
     # Market order
     trade_client.submit_order(order_data=market_order_data)
 
-def pnl(position: dict) -> float:
+def pnl(position: dict, symbol: str) -> float:
     cost_basis = float(position['cost_basis'])
     current_price = float(position['current_price'])
     percentage_change = ((current_price - cost_basis) / cost_basis) 
+    logging.info(f"{symbol} PNL - {cost_basis - current_price}")
+    logging.info(f"{symbol} PNL - {percentage_change}")
     return percentage_change
 
 def run(symbol: str) -> None:
-    logging.info("Algo: begins ...")
-
+    logging.info("Algo begins ...")
+    algo_iter = 0
     p = PacaPosition.Nonexist
     while True:
+        algo_iter += 1
+        logging.info(f"------  Algo iteration - {algo_iter}  --------")
         # wait for 1 minute
         time.sleep(4)
         try:
@@ -82,30 +92,32 @@ def run(symbol: str) -> None:
                 p = PacaPosition.Open
         except Exception as e:
             p = PacaPosition.Nonexist
-            logging.info(f"Algo: {e}")
-
-        logging.info(f"Algo: predict ...")
+            # logging.info(f"Algo: {e}")
+        
+        logging.info(f"{symbol} Position: {p}")
+        logging.info(f"{symbol} Model prediction ...")
         signal = mod.predict(symbol)
+        logging.info(f"{symbol} Trade signal {signal}")
         if p==PacaPosition.Nonexist:
             if signal == mod.SignalTrade.Buy:
-                logging.info("Algo: Open position on {symbol} - submit order")
+                logging.info(f"{symbol} enter position")
                 # preparing market order
                 buy(symbol)
         elif p==PacaPosition.Open:
             pct = pnl(position)
             if pct > 0.03:
-                logging.info("Algo: Close position on {symbol} - submit order")
+                logging.info(f"{symbol} close position - profit target reached")
                 sell(symbol)
                 break
             elif pct < -0.04:
-                logging.info("Algo: Close position on {symbol} - submit order")
+                logging.info(f"{symbol} close position - stop loss")
                 sell(symbol)
                 break
             else:
-                logging.info("Algo: Hold position on {symbol} - do nothing")
+                logging.info(f"{symbol} hold position - continue iteration")
                 continue
         elif p==PacaPosition.Close:
-            logging.info("Algo: Position has been closed on {symbol} - submit order")
+            logging.info(f"{symbol} Position has been close - exit loop")
             break
     # Check position one last time
     try:
