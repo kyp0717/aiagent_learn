@@ -6,7 +6,7 @@ from ibapi.ticktype import TickTypeEnum
 from ibapi.wrapper import EWrapper
 
 
-class TestApp(EClient, EWrapper):
+class IbMomoApp(EClient, EWrapper):
     def __init__(self):
         EClient.__init__(self, self)
 
@@ -42,7 +42,7 @@ class TestApp(EClient, EWrapper):
         )
 
 
-app = TestApp()
+app = IbMomoApp()
 app.connect("127.0.0.1", 7000, 0)
 threading.Thread(target=app.run).start()
 time.sleep(1)
@@ -58,4 +58,3 @@ aapl.primaryExchange = "NASDAQ"
 # app.reqContractDetails(app.nextId(), aapl)
 for i in range(0, 5):
     print(app.nextId())
-    app.reqCurr
