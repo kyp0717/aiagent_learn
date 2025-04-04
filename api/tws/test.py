@@ -2,7 +2,6 @@ import threading
 import time
 
 from ibapi.client import Contract, EClient
-from ibapi.ticktype import TickTypeEnum
 from ibapi.wrapper import EWrapper
 
 
@@ -31,16 +30,6 @@ class TestApp(EClient, EWrapper):
         print("End of contract")
         self.disconnect
 
-    def tickPrice(self, reqId, tickType, price, attrib):
-        print(
-            f"reqId: {reqId}, tickType: {TickTypeEnum.toStr(tickType)} , price: {price}, attrib: {attrib}"
-        )
-
-    def tickSize(self, reqId, tickType, size):
-        print(
-            f"reqId: {reqId}, tickType: {TickTypeEnum.toStr(tickType)} , size: {size} "
-        )
-
 
 app = TestApp()
 app.connect("127.0.0.1", 7000, 0)
@@ -58,4 +47,4 @@ aapl.primaryExchange = "NASDAQ"
 # app.reqContractDetails(app.nextId(), aapl)
 for i in range(0, 5):
     print(app.nextId())
-    app.reqCurr
+    app.reqC
