@@ -31,6 +31,7 @@ class IbMomoApp(EClient, EWrapper):
         print("End of contract")
         self.disconnect
 
+    # tick type specify the type of data coming from TWS
     def tickPrice(self, reqId, tickType, price, attrib):
         print(
             f"reqId: {reqId}, tickType: {TickTypeEnum.toStr(tickType)} , price: {price}, attrib: {attrib}"
@@ -47,14 +48,22 @@ app.connect("127.0.0.1", 7000, 0)
 threading.Thread(target=app.run).start()
 time.sleep(1)
 
-
 aapl = Contract()
 aapl.symbol = "AAPL"
 aapl.secType = "STK"
 aapl.currency = "USD"
 aapl.exchange = "SMART"
+# aapl.exchange = "NASDAQ"
 aapl.primaryExchange = "NASDAQ"
 
 # app.reqContractDetails(app.nextId(), aapl)
 for i in range(0, 5):
     print(app.nextId())
+
+## real-time streaming data
+app.reqMarketDataType(1)
+
+## historical data require market data subscription
+# app.reqMarketDataType(3)
+
+app.reqMktData(app.nextId(), aapl, "232", False, False, [])
