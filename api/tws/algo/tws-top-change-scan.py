@@ -1,11 +1,12 @@
 import threading
 from datetime import date
 from time import sleep
+from typing import Int
 
 from ibapi.client import EClient, ScannerSubscription
 from ibapi.tag_value import TagValue
 from ibapi.ticktype import TickAttrib, TickerId, TickType, TickTypeEnum
-from ibapi.wrapper import ContractDetails, EWrapper
+from ibapi.wrapper import BarData, ContractDetails, EWrapper
 
 port = 7497
 global globalDict
@@ -97,6 +98,16 @@ class TestApp(EWrapper, EClient):
             if TickTypeEnum.to_str(tickType) == value:
                 globalDict[reqId][ind] = price
 
+    # Endo fo all market data request
+    def tickSnapshotEnd(self, reqId: Int):
+        if reqId == 49:
+            self.disconnect
+
+    def historicalData(self, reqId: Int, bar: BarData):
+        global globalDict
+        barDate = bar.date.split()[0]
+        requestedDate = trade.dateCleanUp()
+
 
 def run_loop(app_obj: TestApp):
     print("Run Loop")
@@ -105,6 +116,8 @@ def run_loop(app_obj: TestApp):
 
 # This is an introduction to start using threads and combining
 ## requests with one another class startInvesting():
+
+
 class trade:
     # Normalize Date Values
     def dateCleanUp():
@@ -138,14 +151,33 @@ class trade:
             scannerSubscriptionOptions=scan_options,
         )
 
+        app.run()
+
+    def buildHistorical():
+        global globalDict
+        app = TestApp()
+        app.connect("127.0.0.1", port, clientId)
+        sleep(3)
+        for i in range(0, 5):
+            app.reqHistoricalData(
+                i, globalDict[i][0], "", "2 D", "1 day", "TRADES", 1, 1, 0, []
+            )
+        app.run()
+
+    def calcChange():
+        global globalDict
+        for i in range(0, 5):
+            yesterday = globalDict[i][5]
+            today = globalDict[i][4]
+
 
 def main():
-    startInvesting.buildScanner()
-    startInvesting.printScanner()
-    startInvesting.buildHistorical()
-    startInvesting.calcChange()
-    startInvesting.printTopDif()
-    startInvesting.bestBuys()
+    trade.buildScanner()
+    trade.printScanner()
+    trade.buildHistorical()
+    trade.calcChange()
+    trade.printTopDif()
+    trade.bestBuys()
 
 
 if __name__ == "__main__":
