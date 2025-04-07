@@ -1,14 +1,16 @@
 import threading
 from datetime import date
+from time import sleep
 
 from ibapi.client import EClient, ScannerSubscription
 from ibapi.tag_value import TagValue
-from ibapi.wrapper import EWrapper
-from ibapi.
+from ibapi.ticktype import TickAttrib, TickerId, TickType, TickTypeEnum
+from ibapi.wrapper import ContractDetails, EWrapper
 
 port = 7497
 global globalDict
 globalDict = {}
+
 global clientId
 clientId = 1001
 
@@ -35,14 +37,15 @@ class TestApp(EWrapper, EClient):
 
     def updateAccountValue(self, key, val, currency, accountName):
         if key == "TotalCashBalance" and currency == "BASE":
-            bank[key] = float(val)
+            pass
 
         # if acct drop below $100k disconnect
         if float(val) < 100000:
             self.disconnect
 
     def position(self, account, contract, position, avgCost):
-        position_ref[contract.symbol] = position
+        pass
+        # position_ref[contract.symbol] = position
 
     # Returned Market Scanner information (One rank at a time)
     def scannerData(
@@ -100,8 +103,9 @@ def run_loop(app_obj: TestApp):
     app_obj.run()
 
 
-# This is an introduction to start using threads and combining requests with one another class startInvesting():
-class startInvesting:
+# This is an introduction to start using threads and combining
+## requests with one another class startInvesting():
+class trade:
     # Normalize Date Values
     def dateCleanUp():
         badDate = date.today().____str___().split("-")
@@ -125,6 +129,14 @@ class startInvesting:
             TagValue("marketBelow1e6", "1000"),
             TagValue("priceAbove", "1"),
         ]
+        sleep(3)
+
+        app.reqScannerSubscription(
+            reqId=clientId,
+            subscription=sub,
+            scannerSubscriptionFilterOptions=filter_options,
+            scannerSubscriptionOptions=scan_options,
+        )
 
 
 def main():
@@ -136,6 +148,5 @@ def main():
     startInvesting.bestBuys()
 
 
-if _name_ == "__main__":
+if __name__ == "__main__":
     main()
-    I
