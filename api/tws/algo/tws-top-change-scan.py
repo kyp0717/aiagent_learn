@@ -3,7 +3,10 @@ from datetime import date
 from time import sleep
 from typing import Int
 
-from ibapi.client import EClient, ScannerSubscription
+from ibapi.client import EClient, Order, ScannerSubscription
+
+# from ibapi.client import *
+# from ibapi.wrapper import *
 from ibapi.tag_value import TagValue
 from ibapi.ticktype import TickAttrib, TickerId, TickType, TickTypeEnum
 from ibapi.wrapper import BarData, ContractDetails, EWrapper
@@ -106,7 +109,7 @@ class TestApp(EWrapper, EClient):
     def historicalData(self, reqId: Int, bar: BarData):
         global globalDict
         barDate = bar.date.split()[0]
-        requestedDate = trade.dateCleanUp()
+        requestedDate = Trade.dateCleanUp()
 
 
 def run_loop(app_obj: TestApp):
@@ -115,27 +118,25 @@ def run_loop(app_obj: TestApp):
 
 
 # This is an introduction to start using threads and combining
-## requests with one another class startInvesting():
-
-
-class trade:
+## requests with the class Trade():
+class Trade:
     # Normalize Date Values
+    # good
     def dateCleanUp():
-        badDate = date.today().____str___().split("-")
+        badDate = date.today().__str__().split("-")
         goodDate = badDate[0] + badDate[1] + badDate[2]
         return goodDate
 
     # Create the market scanner
+    # good
     def buildScanner():
         global clientId
-        # create all historical data requests def buildHistorical():
         app = TestApp()
         app.connect("127.0.0.1", port, clientId)
         sub = ScannerSubscription()
         sub.instrument = "STK"
         sub.locationCode = "STK.US.MAJOR"
         sub.scanCode = "TOP_PERC_GAIN"
-
         scan_options = []
         filter_options = [
             TagValue("volumeAbove", "10000"),
@@ -143,7 +144,6 @@ class trade:
             TagValue("priceAbove", "1"),
         ]
         sleep(3)
-
         app.reqScannerSubscription(
             reqId=clientId,
             subscription=sub,
@@ -153,6 +153,8 @@ class trade:
 
         app.run()
 
+    # create all historical data requests def buildHistorical():
+    # good
     def buildHistorical():
         global globalDict
         app = TestApp()
@@ -164,20 +166,107 @@ class trade:
             )
         app.run()
 
+    # calculate change
     def calcChange():
         global globalDict
         for i in range(0, 5):
             yesterday = globalDict[i][5]
             today = globalDict[i][4]
+            now = globalDict[i][3]
+
+            globalDict[i][6] = float((now / today.open) * 100)
+            globalDict[i][7] = float((now / yesterday.open) * 100)
+            globalDict[i][8] = float(now - today.open)
+            globalDict[i][8] = float(now - yesterday.open)
+
+    def bestBuys():
+        bestVal = globalDict[0]
+        bestPerc = globalDict[0]
+
+        for i in range(0, 5):
+            if globals[i][8] > bestVal[8]:
+                bestVal = globalDict[i]
+
+            if globals[i][6] > bestPerc[6]:
+                bestPerc = globalDict[i]
+                print(globalDict[i][6], " > ", bestPerc[6])
+
+        print(f"Largest increase by integer: {bestVal[0].symbo} by {bestVal[8]:..4f} ")
+        print(
+            f"Largest increase by percertage: {bestPerc[0].symbo} by {bestPerc[6]:..4f} "
+        )
+
+        buyIt = input("\nWould you like to buy? y/n")
+        if buyIt == "y":
+            Trade.buy([bestVal, bestPerc])
+        else:
+            return
+
+    def buy(steals):
+        global globalDict
+        app = TestApp()
+        app.connect("127.0.0.1", port, clientId)
+        sleep(3)
+        for i in range(0, 1):
+            # order = Order()
+            o = Order()
+            clientId += 1
+            o.OrderId = clientId
+            o.action = "BUY"
+            o.orderType = "MKT"
+            o.totalQuantity = 100
+            o.tif = "GTC"
+            app.placeOrder(o.orderId, steals[i][0], o)
+
+        threading.Timer(10, app.stop).start()
+        app.run()
+
+    # print scanner results
+    def printScanner():
+        for i in globalDict:
+            contract = globals[i][0]
+            bidPrice = globals[i][1]
+            askPrice = globals[i][2]
+            lastPrice = globals[i][3]
+            print(
+                f"Rank: {i}; Symbol: {contract.symbol}; Bid: {bidPrice}; Ask: {askPrice}; Last: {lastPrice}"
+            )
+        return
+
+    # print top change
+    def printTopDif():
+        global globalDict
+        print("\nThe top 5 Orders, Compared to this morning's opening:")
+        for i in range(0, 5):
+            symbol = globalDict[i][0].symbol
+            yesterday = globalDict[i][5]
+            today = globalDict[i][4]
+            now = globalDict[i][3]
+
+            print(f"Symbol: {symbol}; Current Price: {now} ")
+            print(
+                f"Today's bar: Open: {today.open}, High: {today.high}, Low: {today.low}, Close: {today.close};"
+            )
+            print(
+                f" {yesterday.date}'s bar: Open: {yesterday.open}, High: {yesterday.high}, Low: {yesterday.low}, Close: {yesterday.close}; "
+            )
+            print(
+                "Change from this morning: {globalDict[i][8]:.4f} OR {globalDict[i][6]:.4f}%."
+            )
+            print(
+                "Change from last trade day: {globalDict[i][9]:.4f} OR {globalDict[i][7]:.4f}%. \n"
+            )
+        return
 
 
+## main app
 def main():
-    trade.buildScanner()
-    trade.printScanner()
-    trade.buildHistorical()
-    trade.calcChange()
-    trade.printTopDif()
-    trade.bestBuys()
+    Trade.buildScanner()
+    Trade.printScanner()
+    Trade.buildHistorical()
+    Trade.calcChange()
+    Trade.printTopDif()
+    Trade.bestBuys()
 
 
 if __name__ == "__main__":
